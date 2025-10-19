@@ -32,7 +32,7 @@ private:
 public:
     void addBook(const Book& b) {
         books.push_back(b);
-        cout << "✅ Book \"" << b.getTitle() << "\" added to catalog.\n";
+        cout << " Book \"" << b.getTitle() << "\" added to catalog.\n";
     }
 
     const Book* searchByTitle(const string& title) const {
