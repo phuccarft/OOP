@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Thư viện</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Hệ thống Quản lý Thư viện</h1>
+
+    <div class="card">
+        <h2>Thêm Thành viên mới</h2>
+        
+        <form id="member-form">
+            <div class="form-group">
+                <label for="name">Tên thành viên:</label>
+                <input type="text" id="name" placeholder="Ví dụ: Nguyễn Văn A" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="member-id">ID Thành viên:</label>
+                <input type="text" id="member-id" placeholder="Ví dụ: S12345" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="member-type">Loại thành viên:</label>
+                <select id="member-type">
+                    <option value="student">Sinh viên (Student)</option>
+                    <option value="teacher">Giáo viên (Teacher)</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="submit-btn">Thêm Thành viên</button>
+        </form>
+
+        <div id="feedback-message"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
