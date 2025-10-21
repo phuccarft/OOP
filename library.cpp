@@ -1,8 +1,12 @@
 #include "Library.h"
 #include "Student.h"
 #include "Teacher.h"
+#include "Loan.h"      
 #include <iostream>
 #include <limits>
+#include <chrono>      
+#include <iomanip>     
+
 
 void Library::run() {
     int choice = 0;
@@ -31,6 +35,7 @@ void Library::run() {
     }
 }
 
+
 void Library::showMenu() {
     std::cout << "--- HE THONG QUAN LY THU VIEN ---\n";
     std::cout << "1. Them thanh vien (Student/Teacher)\n";
@@ -41,6 +46,7 @@ void Library::showMenu() {
     std::cout << "6. Thoat\n";
     std::cout << "Nhap lua chon cua ban: ";
 }
+
 
 void Library::addMember() {
     std::string name, id, type;
@@ -62,6 +68,8 @@ void Library::addMember() {
         std::cout << "Loai thanh vien khong hop le.\n";
     }
 }
+
+
 void Library::addMember(std::string name, std::string id, std::string type) {
     if (type == "student") {
         members.push_back(new Student(name, id));
@@ -73,6 +81,7 @@ void Library::addMember(std::string name, std::string id, std::string type) {
         std::cout << "[Server Log] LOI: Loai thanh vien khong hop le" << std::endl;
     }
 }
+
 
 void Library::addBook() {
     std::string title, author, isbn;
@@ -86,6 +95,7 @@ void Library::addBook() {
     books.push_back(Book(title, author, isbn));
     std::cout << "Da them sach: " << title << "\n";
 }
+
 
 void Library::calculateFee() {
     std::cout << "--- Day la vi du ve Tinh Da Hinh (Polymorphism) ---\n";
@@ -121,6 +131,7 @@ void Library::calculateFee() {
     std::cout << "Tong phi tre han cho " << member->getName() << " la: $" << fee << "\n";
 }
 
+
 Member* Library::findMemberByID(std::string id) {
     for (Member* m : members) {
         if (m->getMemberID() == id) {
@@ -130,25 +141,99 @@ Member* Library::findMemberByID(std::string id) {
     return nullptr;
 }
 
+
 Book* Library::findBookByIsbn(std::string isbn) {
-    for (auto& book : books) {
+    
+    for (auto& book : books) { 
         if (book.getIsbn() == isbn) {
-            return &book;
+            return &book; 
         }
     }
     return nullptr;
 }
 
+
 void Library::loanBook() {
-    std::cout << "Chuc nang Muon Sach chua duoc cai dat.\n";
+    std::string memberID, isbn;
+    std::cout << "Nhap ID thanh vien muon sach: ";
+    std::getline(std::cin, memberID);
+    
+    Member* member = findMemberByID(memberID);
+    if (member == nullptr) {
+        std::cout << "Loi: Khong tim thay thanh vien.\n";
+        return;
+    }
+
+    std::cout << "Nhap ma ISBN cua sach: ";
+    std::getline(std::cin, isbn);
+
+    Book* book = findBookByIsbn(isbn);
+    if (book == nullptr) {
+        std::cout << "Loi: Khong tim thay sach.\n";
+        return;
+    }
+
+    
+    if (!book->isAvailable()) {
+        std::cout << "Loi: Sach \"" << book->getTitle() << "\" hien dang duoc muon.\n";
+        return;
+    }
+
+    
+    loans.push_back(Loan(book, member)); 
+    std::cout << "THANH CONG: " << member->getName() << " da muon \"" 
+              << book->getTitle() << "\".\n";
 }
 
+
 void Library::returnBook() {
-    std::cout << "Chuc nang Tra Sach chua duoc cai dat.\n";
+    std::string isbn;
+    std::cout << "Nhap ma ISBN cua sach can tra: ";
+    std::getline(std::cin, isbn);
+
+    Book* book = findBookByIsbn(isbn);
+    if (book == nullptr) {
+        std::cout << "Loi: Khong tim thay sach nay trong he thong.\n";
+        return;
+    }
+
+    
+    Loan* loan = findActiveLoan(book);
+    if (loan == nullptr) {
+        std::cout << "Loi: Sach nay hien khong co ai muon (hoac da duoc tra).\n";
+        return;
+    }
+
+    
+    loan->returnBook();
+    std::cout << "THANH CONG: Sach \"" << book->getTitle() << "\" da duoc tra boi " 
+              << loan->member->getName() << ".\n";
+
+    
+    int daysLate = loan->getDaysLate(); 
+    if (daysLate > 0) {
+        double fee = loan->member->calculateLateFee(daysLate);
+        std::cout << "!!! SACH BI TRE HAN " << daysLate << " ngay.\n";
+        std::cout << "    Tong phi tre han la: $" << fee << "\n";
+    }
 }
+
+
+Loan* Library::findActiveLoan(Book* book) {
+    for (auto& loan : loans) {
+        
+        if (loan.book == book && !loan.isReturned) {
+            return &loan; 
+        }
+    }
+    return nullptr; 
+}
+
+
 
 Library::~Library() {
     for (Member* member : members) {
         delete member;
     }
+    
 }
