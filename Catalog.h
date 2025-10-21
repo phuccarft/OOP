@@ -11,22 +11,27 @@ private:
     std::vector<Book*> books;
 
 public:
+    // Destructor to clean up allocated memory
     ~Catalog() {
         for (Book* book : books) {
             delete book;
         }
     }
+
+    // Method to add a book (for testing)
     void addBook(Book* book) {
         books.push_back(book);
     }
+
+    // Method to find a book
     Book* findBookByTitle(const std::string& title) {
         for (Book* book : books) {
             if (book->getTitle() == title) {
                 return book;
             }
         }
-        return nullptr;
+        return nullptr; // Not found
     }
 };
 
-#endif
+#endif // CATALOG_H
