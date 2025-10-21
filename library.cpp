@@ -2,15 +2,16 @@
 #include "Student.h"
 #include "Teacher.h"
 #include "Loan.h"      
+#include "Catalog.h"   // <-- Include Catalog
 #include <iostream>
 #include <limits>
 #include <chrono>      
 #include <iomanip>     
 
-
+// We need to add our new menu option
 void Library::run() {
     int choice = 0;
-    while (choice != 6) {
+    while (choice != 7) { // <-- Changed exit to 7
         showMenu();
         std::cin >> choice;
         if (std::cin.fail()) {
@@ -25,64 +26,36 @@ void Library::run() {
         switch (choice) {
             case 1: addMember(); break;
             case 2: addBook(); break;
-            case 3: loanBook(); break; 
-            case 4: returnBook(); break; 
-            case 5: calculateFee(); break;
-            case 6: std::cout << "Tam biet!\n"; break;
+            case 3: viewCatalog(); break; // <-- New option
+            case 4: loanBook(); break; 
+            case 5: returnBook(); break; 
+            case 6: calculateFee(); break;
+            case 7: std::cout << "Tam biet!\n"; break; // <-- Changed exit to 7
             default: std::cout << "Lua chon khong hop le. Thu lai.\n";
         }
         std::cout << "\n";
     }
 }
 
-
+// Add the new option to the menu text
 void Library::showMenu() {
     std::cout << "--- HE THONG QUAN LY THU VIEN ---\n";
     std::cout << "1. Them thanh vien (Student/Teacher)\n";
     std::cout << "2. Them sach moi\n";
-    std::cout << "3. Muon sach\n";
-    std::cout << "4. Tra sach\n";
-    std::cout << "5. Tinh phi tre han\n";
-    std::cout << "6. Thoat\n";
+    std::cout << "3. Hien thi danh muc sach (View Catalog)\n"; // <-- New
+    std::cout << "4. Muon sach\n";
+    std::cout << "5. Tra sach\n";
+    std::cout << "6. Tinh phi tre han\n";
+    std::cout << "7. Thoat\n"; // <-- New
     std::cout << "Nhap lua chon cua ban: ";
 }
 
-
-void Library::addMember() {
-    std::string name, id, type;
-    std::cout << "Ban muon them (S)tudent hay (T)eacher? ";
-    std::getline(std::cin, type);
-
-    std::cout << "Nhap ten: ";
-    std::getline(std::cin, name);
-    std::cout << "Nhap ID thanh vien: ";
-    std::getline(std::cin, id);
-
-    if (type == "S" || type == "s") {
-        members.push_back(new Student(name, id));
-        std::cout << "Da them sinh vien: " << name << "\n";
-    } else if (type == "T" || type == "t") {
-        members.push_back(new Teacher(name, id));
-        std::cout << "Da them giao vien: " << name << "\n";
-    } else {
-        std::cout << "Loai thanh vien khong hop le.\n";
-    }
-}
+// Your addMember() and overloaded addMember() are unchanged...
+void Library::addMember() { /* ... no change ... */ }
+void Library::addMember(std::string name, std::string id, std::string type) { /* ... no change ... */ }
 
 
-void Library::addMember(std::string name, std::string id, std::string type) {
-    if (type == "student") {
-        members.push_back(new Student(name, id));
-        std::cout << "[Server Log] Da them Student: " << name << std::endl;
-    } else if (type == "teacher") {
-        members.push_back(new Teacher(name, id));
-        std::cout << "[Server Log] Da them Teacher: " << name << std::endl;
-    } else {
-        std::cout << "[Server Log] LOI: Loai thanh vien khong hop le" << std::endl;
-    }
-}
-
-
+// --- MODIFIED FUNCTION ---
 void Library::addBook() {
     std::string title, author, isbn;
     std::cout << "Nhap tieu de sach: ";
@@ -92,67 +65,25 @@ void Library::addBook() {
     std::cout << "Nhap ma ISBN: ";
     std::getline(std::cin, isbn);
 
-    books.push_back(Book(title, author, isbn));
+    // Create a book object
+    Book newBook(title, author, isbn);
+    // Add it to the catalog object
+    catalog.addBook(newBook); 
+
     std::cout << "Da them sach: " << title << "\n";
 }
 
+// Your calculateFee() is unchanged...
+void Library::calculateFee() { /* ... no change ... */ }
 
-void Library::calculateFee() {
-    std::cout << "--- Day la vi du ve Tinh Da Hinh (Polymorphism) ---\n";
-    std::string id;
-    int daysLate;
+// Your findMemberByID() is unchanged...
+Member* Library::findMemberByID(std::string id) { /* ... no change ... */ }
 
-    std::cout << "Nhap ID thanh vien: ";
-    std::getline(std::cin, id);
+// --- REMOVED FUNCTION ---
+// This function is now inside Catalog.cpp
+// Book* Library::findBookByIsbn(std::string isbn) { ... }
 
-    Member* member = findMemberByID(id);
-    if (member == nullptr) {
-        std::cout << "Khong tim thay thanh vien voi ID: " << id << "\n";
-        std::cout << "--- Demo tinh phi ---\n";
-        Member* demoStudent = new Student("Demo SV", "S1");
-        Member* demoTeacher = new Teacher("Demo GV", "T1");
-
-        std::cout << "Phi tre 10 ngay cho Student: $" 
-                  << demoStudent->calculateLateFee(10) << "\n";
-        std::cout << "Phi tre 10 ngay cho Teacher: $" 
-                  << demoTeacher->calculateLateFee(10) << "\n"; 
-
-        delete demoStudent;
-        delete demoTeacher;
-        
-        return;
-    }
-
-    std::cout << "Thanh vien tim thay: " << member->getName() << "\n";
-    std::cout << "Nhap so ngay tre han: ";
-    std::cin >> daysLate;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
-    double fee = member->calculateLateFee(daysLate);
-    std::cout << "Tong phi tre han cho " << member->getName() << " la: $" << fee << "\n";
-}
-
-
-Member* Library::findMemberByID(std::string id) {
-    for (Member* m : members) {
-        if (m->getMemberID() == id) {
-            return m;
-        }
-    }
-    return nullptr;
-}
-
-
-Book* Library::findBookByIsbn(std::string isbn) {
-    
-    for (auto& book : books) { 
-        if (book.getIsbn() == isbn) {
-            return &book; 
-        }
-    }
-    return nullptr;
-}
-
-
+// --- MODIFIED FUNCTION ---
 void Library::loanBook() {
     std::string memberID, isbn;
     std::cout << "Nhap ID thanh vien muon sach: ";
@@ -167,50 +98,47 @@ void Library::loanBook() {
     std::cout << "Nhap ma ISBN cua sach: ";
     std::getline(std::cin, isbn);
 
-    Book* book = findBookByIsbn(isbn);
+    // Use the catalog object to find the book
+    Book* book = catalog.findBookByIsbn(isbn); 
     if (book == nullptr) {
         std::cout << "Loi: Khong tim thay sach.\n";
         return;
     }
 
-    
     if (!book->isAvailable()) {
         std::cout << "Loi: Sach \"" << book->getTitle() << "\" hien dang duoc muon.\n";
         return;
     }
 
-    
     loans.push_back(Loan(book, member)); 
     std::cout << "THANH CONG: " << member->getName() << " da muon \"" 
               << book->getTitle() << "\".\n";
 }
 
-
+// --- MODIFIED FUNCTION ---
 void Library::returnBook() {
     std::string isbn;
     std::cout << "Nhap ma ISBN cua sach can tra: ";
     std::getline(std::cin, isbn);
 
-    Book* book = findBookByIsbn(isbn);
+    // Use the catalog object to find the book
+    Book* book = catalog.findBookByIsbn(isbn);
     if (book == nullptr) {
         std::cout << "Loi: Khong tim thay sach nay trong he thong.\n";
         return;
     }
 
-    
     Loan* loan = findActiveLoan(book);
     if (loan == nullptr) {
         std::cout << "Loi: Sach nay hien khong co ai muon (hoac da duoc tra).\n";
         return;
     }
 
-    
     loan->returnBook();
     std::cout << "THANH CONG: Sach \"" << book->getTitle() << "\" da duoc tra boi " 
               << loan->member->getName() << ".\n";
 
-    
-    int daysLate = loan->getDaysLate(); 
+    int daysLate = loan->getDaysLate();
     if (daysLate > 0) {
         double fee = loan->member->calculateLateFee(daysLate);
         std::cout << "!!! SACH BI TRE HAN " << daysLate << " ngay.\n";
@@ -218,22 +146,14 @@ void Library::returnBook() {
     }
 }
 
+// Your findActiveLoan() is unchanged...
+Loan* Library::findActiveLoan(Book* book) { /* ... no change ... */ }
 
-Loan* Library::findActiveLoan(Book* book) {
-    for (auto& loan : loans) {
-        
-        if (loan.book == book && !loan.isReturned) {
-            return &loan; 
-        }
-    }
-    return nullptr; 
+// --- NEW FUNCTION ---
+// This just calls the catalog's display method
+void Library::viewCatalog() {
+    catalog.displayAllBooks();
 }
 
-
-
-Library::~Library() {
-    for (Member* member : members) {
-        delete member;
-    }
-    
-}
+// Your destructor is unchanged...
+Library::~Library() { /* ... no change ... */ }
