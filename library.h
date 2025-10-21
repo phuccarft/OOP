@@ -3,40 +3,41 @@
 
 #include <vector>
 #include <string>
-#include "Member.h" 
+#include "Member.h"
 #include "Book.h"
 #include "Loan.h"
+#include "Catalog.h" 
 
 class Library {
 private:
-    std::vector<Book> books;    
+    
+    Catalog catalog;            
+    
     std::vector<Member*> members;
     std::vector<Loan> loans;    
 
     
     Member* findMemberByID(std::string id);
-    Book* findBookByIsbn(std::string isbn);
     
     Loan* findActiveLoan(Book* book); 
 
 public:
-    
     Library() = default; 
     ~Library();          
 
-    
     void run();
 
 private:
-    
     void showMenu();
     void addMember();
-    //
     void addMember(std::string name, std::string id, std::string type); 
     void addBook();
     void loanBook();    
     void returnBook();  
     void calculateFee();
+    
+    
+    void viewCatalog(); 
 };
 
-#endif 
+#endif // LIBRARY_H
