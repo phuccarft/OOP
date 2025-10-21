@@ -1,159 +1,90 @@
+#include <iostream>
 #include "Library.h"
 #include "Student.h"
 #include "Teacher.h"
-#include "Loan.h"      
-#include "Catalog.h"   // <-- Include Catalog
-#include <iostream>
-#include <limits>
-#include <chrono>      
-#include <iomanip>     
 
-// We need to add our new menu option
+// Destructor: Cleans up dynamically allocated memory for members
+Library::~Library() {
+    for (Member* member : members) {
+        delete member;
+    }
+    // The 'loans' vector contains objects, not pointers, so it cleans up itself.
+    // The 'catalog' object also cleans up its own memory.
+}
+
+// Main application loop (for the console app)
 void Library::run() {
-    int choice = 0;
-    while (choice != 7) { // <-- Changed exit to 7
-        showMenu();
-        std::cin >> choice;
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Lua chon khong hop le. Vui long nhap so.\n";
-            continue;
-        }
-        
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
-
-        switch (choice) {
-            case 1: addMember(); break;
-            case 2: addBook(); break;
-            case 3: viewCatalog(); break; // <-- New option
-            case 4: loanBook(); break; 
-            case 5: returnBook(); break; 
-            case 6: calculateFee(); break;
-            case 7: std::cout << "Tam biet!\n"; break; // <-- Changed exit to 7
-            default: std::cout << "Lua chon khong hop le. Thu lai.\n";
-        }
-        std::cout << "\n";
-    }
+    std::cout << "Welcome to the Library Management System!" << std::endl;
+    // In a real application, you would have a menu loop here.
+    // For now, this is just a placeholder.
+    showMenu();
 }
 
-// Add the new option to the menu text
+// Private method to show the main menu
 void Library::showMenu() {
-    std::cout << "--- HE THONG QUAN LY THU VIEN ---\n";
-    std::cout << "1. Them thanh vien (Student/Teacher)\n";
-    std::cout << "2. Them sach moi\n";
-    std::cout << "3. Hien thi danh muc sach (View Catalog)\n"; // <-- New
-    std::cout << "4. Muon sach\n";
-    std::cout << "5. Tra sach\n";
-    std::cout << "6. Tinh phi tre han\n";
-    std::cout << "7. Thoat\n"; // <-- New
-    std::cout << "Nhap lua chon cua ban: ";
+    std::cout << "\n--- Library Menu ---\n";
+    std::cout << "This is a placeholder for the menu.\n";
+    std::cout << "Functionality is handled by the web server.\n";
 }
 
-// Your addMember() and overloaded addMember() are unchanged...
-void Library::addMember() { /* ... no change ... */ }
-void Library::addMember(std::string name, std::string id, std::string type) { /* ... no change ... */ }
-
-
-// --- MODIFIED FUNCTION ---
-void Library::addBook() {
-    std::string title, author, isbn;
-    std::cout << "Nhap tieu de sach: ";
-    std::getline(std::cin, title);
-    std::cout << "Nhap tac gia: ";
-    std::getline(std::cin, author);
-    std::cout << "Nhap ma ISBN: ";
-    std::getline(std::cin, isbn);
-
-    // Create a book object
-    Book newBook(title, author, isbn);
-    // Add it to the catalog object
-    catalog.addBook(newBook); 
-
-    std::cout << "Da them sach: " << title << "\n";
-}
-
-// Your calculateFee() is unchanged...
-void Library::calculateFee() { /* ... no change ... */ }
-
-// Your findMemberByID() is unchanged...
-Member* Library::findMemberByID(std::string id) { /* ... no change ... */ }
-
-// --- REMOVED FUNCTION ---
-// This function is now inside Catalog.cpp
-// Book* Library::findBookByIsbn(std::string isbn) { ... }
-
-// --- MODIFIED FUNCTION ---
-void Library::loanBook() {
-    std::string memberID, isbn;
-    std::cout << "Nhap ID thanh vien muon sach: ";
-    std::getline(std::cin, memberID);
+// Method to add a member (used by the server)
+void Library::addMember(std::string name, std::string id, std::string type) {
+    // Check if member already exists
+    if (findMemberByID(id)) {
+        std::cout << "Member with ID " << id << " already exists." << std::endl;
+        // In a real app, you might throw an exception here
+        return;
+    }
     
-    Member* member = findMemberByID(memberID);
-    if (member == nullptr) {
-        std::cout << "Loi: Khong tim thay thanh vien.\n";
-        return;
+    if (type == "student") {
+        members.push_back(new Student(name, id));
+        std::cout << "Student '" << name << "' added." << std::endl;
+    } else if (type == "teacher") {
+        members.push_back(new Teacher(name, id));
+        std::cout << "Teacher '" << name << "' added." << std::endl;
+    } else {
+        std::cout << "Unknown member type: " << type << std::endl;
     }
-
-    std::cout << "Nhap ma ISBN cua sach: ";
-    std::getline(std::cin, isbn);
-
-    // Use the catalog object to find the book
-    Book* book = catalog.findBookByIsbn(isbn); 
-    if (book == nullptr) {
-        std::cout << "Loi: Khong tim thay sach.\n";
-        return;
-    }
-
-    if (!book->isAvailable()) {
-        std::cout << "Loi: Sach \"" << book->getTitle() << "\" hien dang duoc muon.\n";
-        return;
-    }
-
-    loans.push_back(Loan(book, member)); 
-    std::cout << "THANH CONG: " << member->getName() << " da muon \"" 
-              << book->getTitle() << "\".\n";
 }
 
-// --- MODIFIED FUNCTION ---
+// Helper to find a member by their ID
+Member* Library::findMemberByID(std::string id) {
+    for (Member* member : members) {
+        if (member->getMemberID() == id) {
+            return member;
+        }
+    }
+    return nullptr; // Return null if not found
+}
+
+// --- Placeholder Implementations for other functions ---
+// You can fill these in with your application's logic later.
+
+void Library::addMember() {
+    std::cout << "Function 'addMember' (console version) is not implemented.\n";
+}
+
+void Library::addBook() {
+    std::cout << "Function 'addBook' is not implemented.\n";
+}
+
+void Library::loanBook() {
+    std::cout << "Function 'loanBook' is not implemented.\n";
+}
+
 void Library::returnBook() {
-    std::string isbn;
-    std::cout << "Nhap ma ISBN cua sach can tra: ";
-    std::getline(std::cin, isbn);
-
-    // Use the catalog object to find the book
-    Book* book = catalog.findBookByIsbn(isbn);
-    if (book == nullptr) {
-        std::cout << "Loi: Khong tim thay sach nay trong he thong.\n";
-        return;
-    }
-
-    Loan* loan = findActiveLoan(book);
-    if (loan == nullptr) {
-        std::cout << "Loi: Sach nay hien khong co ai muon (hoac da duoc tra).\n";
-        return;
-    }
-
-    loan->returnBook();
-    std::cout << "THANH CONG: Sach \"" << book->getTitle() << "\" da duoc tra boi " 
-              << loan->member->getName() << ".\n";
-
-    int daysLate = loan->getDaysLate();
-    if (daysLate > 0) {
-        double fee = loan->member->calculateLateFee(daysLate);
-        std::cout << "!!! SACH BI TRE HAN " << daysLate << " ngay.\n";
-        std::cout << "    Tong phi tre han la: $" << fee << "\n";
-    }
+    std::cout << "Function 'returnBook' is not implemented.\n";
 }
 
-// Your findActiveLoan() is unchanged...
-Loan* Library::findActiveLoan(Book* book) { /* ... no change ... */ }
+void Library::calculateFee() {
+    std::cout << "Function 'calculateFee' is not implemented.\n";
+}
 
-// --- NEW FUNCTION ---
-// This just calls the catalog's display method
 void Library::viewCatalog() {
-    catalog.displayAllBooks();
+    std::cout << "Function 'viewCatalog' is not implemented.\n";
 }
 
-// Your destructor is unchanged...
-Library::~Library() { /* ... no change ... */ }
+Loan* Library::findActiveLoan(Book* book) {
+    std::cout << "Function 'findActiveLoan' is not implemented.\n";
+    return nullptr;
+}

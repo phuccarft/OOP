@@ -3,33 +3,35 @@
 
 #include <vector>
 #include <string>
-#include "Book.h" // Needs to know what a Book is
+#include <iostream>
+#include "Book.h"
 
 class Catalog {
 private:
-    std::vector<Book> books; // The list of books lives here now
+    std::vector<Book*> books;
 
 public:
-    Catalog() = default; // Default constructor
+    // Destructor to clean up allocated memory
+    ~Catalog() {
+        for (Book* book : books) {
+            delete book;
+        }
+    }
 
-    // --- Public Methods ---
+    // Method to add a book (for testing)
+    void addBook(Book* book) {
+        books.push_back(book);
+    }
 
-    /**
-     * Adds a new Book object to the catalog.
-     */
-    void addBook(const Book& book);
-
-    /**
-     * Finds a book by its ISBN.
-     * Returns a pointer to the book in the catalog, or 'nullptr' if not found.
-     */
-    Book* findBookByIsbn(const std::string& isbn);
-
-    /**
-     * Prints details for all books in the catalog.
-     * (This is a new helper method that makes sense for a catalog)
-     */
-    void displayAllBooks() const;
+    // Method to find a book
+    Book* findBookByTitle(const std::string& title) {
+        for (Book* book : books) {
+            if (book->getTitle() == title) {
+                return book;
+            }
+        }
+        return nullptr; // Not found
+    }
 };
 
 #endif // CATALOG_H
