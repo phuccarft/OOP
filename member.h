@@ -1,16 +1,30 @@
-#pragma once
+#ifndef MEMBER_H
+#define MEMBER_H
+
 #include <string>
-#include <vector>
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
+
 class Member {
 protected:
     std::string name;
-    std::string memberID;
+    std::string id;
+    std::string email;
 
 public:
-    Member(std::string name, std::string memberID)
-        : name(name), memberID(memberID) {}
+    Member(const std::string& name, const std::string& id, const std::string& email)
+        : name(name), id(id), email(email) {}
+    
     virtual ~Member() {}
+    
     virtual double calculateLateFee(int daysLate) = 0;
+    virtual json to_json() const = 0;
+    
+    // Getters
+    std::string getId() const { return id; }
     std::string getName() const { return name; }
-    std::string getMemberID() const { return memberID; }
+    std::string getEmail() const { return email; }
 };
+
+#endif

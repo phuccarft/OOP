@@ -1,41 +1,41 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
-#include <vector>
 #include <string>
-#include "Member.h"
-#include "Book.h"
-#include "Loan.h"
-#include "Catalog.h" 
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include "nlohmann/json.hpp"
+#include "member.h"
+#include "Student.h"
+#include "Teacher.h" 
+#include "Catalog.h"
+#include "Loan.h" 
+
+using json = nlohmann::json;
 
 class Library {
 private:
-    // Internal data remains private
-    Catalog catalog;            
     std::vector<Member*> members;
-    std::vector<Loan> loans;    
+    std::string members_filename;
+    std::vector<Loan*> activeLoans;
+    Catalog catalog;
+public:
 
-    // Internal helper functions can remain private
-    Member* findMemberByID(std::string id);
-    Loan* findActiveLoan(Book* book); 
+    Library(); // <-- Constructor để khởi tạo Catalog
+    ~Library();
+    Member* findMemberByCredentials(const std::string& id, const std::string& email) const;
+    void clearAllMembers();
+    void loadMembers();
+    void saveMembers() const; 
+    Member* findMemberByID(const std::string& id) const;
+    void addMember(const std::string& name, const std::string& id, const std::string& email, const std::string& type); 
 
-public: // This is the public interface for your class
-    Library() = default; 
-    ~Library();          
+    // Các hàm quản lý Loan
+    void loadLoans(); 
+    void saveLoans() const;
+    Loan* borrowBook(const std::string& bookIsbn, const std::string& memberId);
 
-    void run(); // For the console app
-    
-    // **MOVED HERE:** This function now needs to be public so server_main.cpp can call it.
-    void addMember(std::string name, std::string id, std::string type); 
-
-private: // These are only used internally by the class
-    void showMenu();
-    void addMember(); // Overloaded version for console, can stay private if only called by run()
-    void addBook();
-    void loanBook();    
-    void returnBook();  
-    void calculateFee();
-    void viewCatalog(); 
 };
 
-#endif // LIBRARY_H
+#endif

@@ -1,37 +1,21 @@
 #ifndef CATALOG_H
 #define CATALOG_H
-
-#include <vector>
 #include <string>
-#include <iostream>
+#include <vector>
 #include "Book.h"
 
 class Catalog {
-private:
-    std::vector<Book*> books;
-
 public:
-    // Destructor to clean up allocated memory
-    ~Catalog() {
-        for (Book* book : books) {
-            delete book;
-        }
-    }
+    void addBook(const Book& book); 
+    Book* findBookByIsbn(const std::string& isbn); 
+    void displayAllBooks() const; 
+    Catalog() {}  
+    ~Catalog() {} 
 
-    // Method to add a book (for testing)
-    void addBook(Book* book) {
-        books.push_back(book);
-    }
 
-    // Method to find a book
-    Book* findBookByTitle(const std::string& title) {
-        for (Book* book : books) {
-            if (book->getTitle() == title) {
-                return book;
-            }
-        }
-        return nullptr; // Not found
-    }
+private:
+    std::vector<Book> books; 
+
 };
 
-#endif // CATALOG_H
+#endif 

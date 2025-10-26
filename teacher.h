@@ -1,11 +1,14 @@
-#pragma once
-#include "Member.h"
+#ifndef TEACHER_H
+#define TEACHER_H
+
+#include "member.h"
+#include <iostream> 
 
 class Teacher : public Member {
 public:
-    Teacher(std::string name, std::string memberID)
-        : Member(name, memberID) {}
-    
-    // Override the virtual function from Member
+    Teacher(const std::string& name, const std::string& id, const std::string& email);
     double calculateLateFee(int daysLate) override;
+    json to_json() const override;
 };
+
+#endif

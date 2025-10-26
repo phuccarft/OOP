@@ -3,41 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Thư viện</title>
+    <title>Thư viện Sách</title>
     <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
 </head>
-<body>
-
-    <h1>Hệ thống Quản lý Thư viện</h1>
-
-    <div class="card">
-        <h2>Thêm Thành viên mới</h2>
-        
-        <form id="member-form">
-            <div class="form-group">
-                <label for="name">Tên thành viên:</label>
-                <input type="text" id="name" placeholder="Ví dụ: Nguyễn Văn A" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="member-id">ID Thành viên:</label>
-                <input type="text" id="member-id" placeholder="Ví dụ: S12345" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="member-type">Loại thành viên:</label>
-                <select id="member-type">
-                    <option value="student">Sinh viên (Student)</option>
-                    <option value="teacher">Giáo viên (Teacher)</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="submit-btn">Thêm Thành viên</button>
-        </form>
-
-        <div id="feedback-message"></div>
+<body class="is-loading">
+    <!-- Vertical Navbar -->
+    <div class="vertical-navbar">
+        <div class="sidebar-header fade-element" style="--delay: 0.1s;">
+            <a href="/" class="navbar-logo">Library</a>
+        </div>
+        <a href="/" class="nav-item active fade-element" style="--delay: 0.2s;">
+            <i class='bx bx-home-alt'></i>
+        </a>
+        <a href="#book-list-section" class="nav-item fade-element" style="--delay: 0.3s;">
+            <i class='bx bx-book'></i>
+        </a>
+        <a href="#" class="nav-item fade-element" style="--delay: 0.4s;">
+            <i class='bx bx-code-alt'></i>
+        </a>
+        <a href="#contact-section" class="nav-item fade-element" style="--delay: 0.5s;">
+            <i class='bx bx-envelope'></i>
+        </a>
     </div>
 
-    <script src="script.js"></script>
+    <div class="content-wrapper">
+        <!-- Top Header Bar -->
+        <div class="top-header-bar">
+            <div class="top-right-actions">
+                <!-- Login button will be updated by session.js -->
+                <a href="login_page.html" class="navbar-login-btn main-action-btn fade-element" style="--delay: 0.2s;">
+                    <i class='bx bx-user-circle'></i>
+                    LOG IN
+                </a>
+                <a href="#book-list-section" class="main-action-btn fade-element" style="--delay: 0.3s;">
+                    MƯỢN SÁCH NGAY
+                </a>
+            </div>
+        </div>
+
+        <!-- User Info Display (shows when logged in) -->
+        <div id="user-info-display"></div>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <div class="hero-text-block">
+                <h1 class="main-title">
+                    <span class="fade-element" style="--delay: 0.4s;">
+                        Nơi ươm mầm<span class="highlight-orange">Tư</span>
+                    </span>
+                    <br><span class="fade-element" style="--delay: 0.6s;">
+                        tưởng, tạo dựng
+                    </span>
+                    <br><span class="fade-element" style="--delay: 0.8s;">
+                        đổi mới.
+                    </span>
+                </h1>
+            </div>
+
+            <div class="sub-text-block">
+                <p class="fade-element" style="--delay: 1.0s;">
+                    Chúng tôi cung cấp tài nguyên thiết yếu giúp các nhà nghiên cứu, sinh viên phát triển tưởng vọng và biến chúng thành hiện thực.
+                </p>
+                <a href="#book-list-section" class="intro-call-btn centered-cta fade-element" style="--delay: 1.2s;">
+                    <i class='bx bx-book-open'></i>
+                    MƯỢN SÁCH NGAY
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-info fade-element" style="--delay: 1.4s;">
+            <p>Nhóm 1</p>
+            <p>Hanoi, Vietnam 12:00 AM</p>
+        </div>
+
+        <!-- Book Catalog Section -->
+        <div class="container book-catalog-section" id="book-list-section">
+            <h2 class="fade-element" style="--delay: 1.5s;">Danh mục sách có sẵn</h2>
+            <p class="fade-element" style="--delay: 1.6s;">Vui lòng chọn một cuốn sách để mượn:</p>
+            <ul class="book-list">
+                <li class="book-item fade-element" style="--delay: 1.7s;"><a href="borrow.html?bookId=101">Lập trình C++ Nâng cao</a></li>
+                <li class="book-item fade-element" style="--delay: 1.8s;"><a href="borrow.html?bookId=102">Cấu trúc dữ liệu và Giải thuật</a></li>
+                <li class="book-item fade-element" style="--delay: 1.9s;"><a href="borrow.html?bookId=103">Thiết kế hệ thống căn bản</a></li>
+                <li class="book-item fade-element" style="--delay: 2.0s;"><a href="borrow.html?bookId=104">OOP với C++</a></li>
+                <li class="book-item fade-element" style="--delay: 2.1s;"><a href="borrow.html?bookId=105">Một cuốn sách có tên rất dài</a></li>
+                <li class="book-item fade-element" style="--delay: 2.2s;"><a href="borrow.html?bookId=106">Sách 6</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="contact-section" style="height: 1px;"></div>
+
+    <!-- Include Session Manager FIRST -->
+    <script src="session.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.body.classList.remove('is-loading');
+
+            // Display user info if logged in
+            SessionManager.displayUserInfo('user-info-display');
+
+            // Navbar magnification effect
+            const navItems = document.querySelectorAll('.vertical-navbar .nav-item');
+            const navbar = document.querySelector('.vertical-navbar');
+            const MAX_SCALE = 1.6;
+            const MAX_DISTANCE = 150;
+
+            function calculateScale(mouseX, mouseY) {
+                navItems.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    const itemCenterX = rect.left + rect.width / 2;
+                    const itemCenterY = rect.top + rect.height / 2;
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - itemCenterX, 2) + 
+                        Math.pow(mouseY - itemCenterY, 2)
+                    );
+
+                    let scale = 1;
+                    if (distance < MAX_DISTANCE) {
+                        const normalizedDistance = distance / MAX_DISTANCE;
+                        const closenessFactor = 1 - normalizedDistance;
+                        scale = 1 + (MAX_SCALE - 1) * closenessFactor;
+                    }
+                    item.style.transition = 'transform 0.1s ease-out';
+                    item.style.transform = `scale(${scale})`;
+                });
+            }
+
+            document.addEventListener('mousemove', (e) => {
+                calculateScale(e.clientX, e.clientY);
+            });
+
+            navbar.addEventListener('mouseleave', () => {
+                navItems.forEach(item => {
+                    item.style.transition = 'transform 0.3s ease';
+                    item.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+    <script src="session.js"></script>
 </body>
 </html>
