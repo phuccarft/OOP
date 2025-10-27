@@ -126,58 +126,46 @@ lib.saveLoans();
     });
     svr.Post("/check-member", [&](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.set_header("Access-Control-Allow-Headers", "Content-Type");
-        
         try {
             json data = json::parse(req.body);
-            std::string memberId = data.value("memberId", "");
-            std::string memberEmail = data.value("memberEmail", "");
+            std::string memberId = data["memberId"];
+            std::string memberEmail = data["memberEmail"]; 
 
-            std::cout << "[AUTH] Login attempt - ID: " << memberId << ", Email: " << memberEmail << std::endl;
-
+            // Use the fixed findMemberByCredentials that checks BOTH ID and Email
             Member* foundMember = lib.findMemberByCredentials(memberId, memberEmail);
 
             if (foundMember != nullptr) {
+                // Authentication successful
                 json response_json;
                 response_json["success"] = true;
                 response_json["memberName"] = foundMember->getName();
                 response_json["memberId"] = foundMember->getId();
-                response_json["memberEmail"] = foundMember->getEmail();
-                response_json["memberType"] = (dynamic_cast<Student*>(foundMember) != nullptr) ? "student" : "teacher";
+                response_json["memberEmail"] = foundMember->getEmail(); 
+                response_json["memberType"] = (dynamic_cast<Student*>(foundMember) != nullptr) 
+                    ? "student" : "teacher";
                 
                 res.set_content(response_json.dump(), "application/json");
                 
-                std::cout << "[AUTH] ✓ Login SUCCESS - User: " << foundMember->getName() << std::endl;
+                std::cout << "[LOGIN SUCCESS] Member: " << foundMember->getName() 
+                        << " (ID: " << memberId << ", Email: " << memberEmail << ")\n";
             } else {
+                // Authentication failed
                 res.status = 401;
                 json error_json;
                 error_json["success"] = false;
-                error_json["message"] = "ID hoac Email khong chinh xac";
+                error_json["message"] = "ID hoac Email khong chinh xac."; 
                 res.set_content(error_json.dump(), "application/json");
                 
-                std::cout << "[AUTH] ✗ Login FAILED - Invalid credentials" << std::endl;
+                std::cout << "[LOGIN FAILED] ID: " << memberId 
+                        << ", Email: " << memberEmail << " - Not found or mismatch.\n";
             }
         } catch (json::parse_error& e) {
             res.status = 400;
-            json error_json;
-            error_json["success"] = false;
-            error_json["message"] = "Invalid JSON";
-            res.set_content(error_json.dump(), "text/plain");
+            res.set_content("JSON khong hop le.", "text/plain");
         } catch (std::exception& e) {
             res.status = 500;
-            json error_json;
-            error_json["success"] = false;
-            error_json["message"] = std::string(e.what());
-            res.set_content(error_json.dump(), "text/plain");
+            res.set_content("Loi server: " + std::string(e.what()), "text/plain");
         }
-    });
-
-    svr.Options("/check-member", [](const Request& req, Response& res) {
-        res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_header("Access-Control-Allow-Headers", "Content-Type");
-        res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.status = 204;
     });
     svr.Post("/admin/clear-members", [&](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
@@ -204,19 +192,17 @@ lib.saveLoans();
         res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
         res.status = 204;
     });
-    // Thêm OPTIONS handler cho CORS
+    // OPTIONS handler cho CORS
     svr.Options("/check-member", [](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Headers", "Content-Type");
         res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
         res.status = 204;
     });
-    //...
-    // Giữ nguyên các định tuyến khác
+
     svr.Get("/admin/show-data", [&](const Request& req, Response& res) {
          res.set_content("Hay go 'showdata' trong console cua server.", "text/plain");
     });
-    // ... (trong hàm run_server)
 
     // Trang đăng nhập mới
     svr.Get("/login_page.html", [](const Request&, Response& res) {
@@ -239,12 +225,42 @@ lib.saveLoans();
     });
     svr.Get("/session.js", [](const Request&, Response& res) {
     res.set_file_content("session.js", "application/javascript");
-});
+    });
 
     svr.Get("/auth.js", [](const Request&, Response& res) {
     res.set_file_content("auth.js", "application/javascript");
-});
-});
+    });
+    svr.Get("/get-all-books", [&](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        try {
+            std::vector<Book> allBooks = lib.getAllBooks();
+            json response_json = json::array();
+
+            for (const auto& book : allBooks) {
+                response_json.push_back({
+                    {"id", book.getIsbn()},
+                    {"title", book.getTitle()},
+                    {"author", book.getAuthor()},
+                    {"iconName", book.getIconName()},
+                    {"isAvailable", book.getIsAvailable()},
+                    {"availableCopies", book.getAvailableCopies()},
+                    {"totalQuantity", book.getTotalQuantity()}
+                });
+            }
+            res.set_content(response_json.dump(), "application/json");
+        } catch (std::exception& e) {
+            res.status = 500;
+            res.set_content(e.what(), "text/plain");
+        }
+    });
+
+    // OPTIONS handler for the new endpoint
+    svr.Options("/get-all-books", [](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Methods", "GET, OPTIONS");
+        res.status = 204;
+    });
 
 
     std::cout << "May chu Web dang lang nghe tai http://localhost:8080\n";

@@ -2,17 +2,16 @@
 #include <iomanip>
 #include <iostream> 
 #include <fstream> 
+#include "book.h"
 using namespace std; 
 
-// Triển khai constructor để khởi tạo Catalog và load data (từ bước trước)
 Library::Library() : members_filename("members.json") {
-    // Tái tạo books_data gốc của bạn và thêm vào Catalog
-    catalog.addBook(Book("Lập trình C++ Nâng cao", "Khoa CNTT", "101"));
-    catalog.addBook(Book("Cấu trúc dữ liệu và Giải thuật", "Khoa CNTT", "102"));
-    catalog.addBook(Book("Thiết kế hệ thống cơ bản", "Khoa CNTT", "103"));
-    catalog.addBook(Book("OOP với C++", "Khoa CNTT", "104"));
-    catalog.addBook(Book("Một cuốn sách có tên rất dài", "Tác giả X", "105"));
-    catalog.addBook(Book("Sách 6", "Tác giả Y", "106"));
+    catalog.addBook(Book("Lập trình C++ Nâng cao", "Khoa CNTT", "101", 5, "bx-code-alt"));
+    catalog.addBook(Book("Cấu trúc dữ liệu và Giải thuật", "Khoa CNTT", "102", 5, "bx-sitemap"));
+    catalog.addBook(Book("Thiết kế hệ thống cơ bản", "Khoa CNTT", "103", 3, "bx-server"));
+    catalog.addBook(Book("OOP với C++", "Khoa CNTT", "104", 5, "bx-atom"));
+    catalog.addBook(Book("Một cuốn sách có tên rất dài", "Anh Khoi", "105", 1, "bx-book-reader"));
+    catalog.addBook(Book("Sách 6", "Anh Khoi", "106", 4, "bx-book-open"));
 }
 
 Library::~Library() {
@@ -148,4 +147,7 @@ Member* Library::findMemberByCredentials(const std::string& id, const std::strin
         }
     }
     return nullptr;
+}
+std::vector<Book> Library::getAllBooks() const {
+    return catalog.getAllBooks();
 }

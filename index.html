@@ -6,8 +6,7 @@
     <title>Thư viện Sách</title>
     <link rel="stylesheet" href="style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap&subset=vietnamese" rel="stylesheet">
 </head>
 <body class="is-loading">
     <!-- Vertical Navbar -->
@@ -83,28 +82,83 @@
         <div class="container book-catalog-section" id="book-list-section">
             <h2 class="fade-element" style="--delay: 1.5s;">Danh mục sách có sẵn</h2>
             <p class="fade-element" style="--delay: 1.6s;">Vui lòng chọn một cuốn sách để mượn:</p>
+            
             <ul class="book-list">
                 <li class="book-item fade-element" style="--delay: 1.7s;"><a href="borrow.html?bookId=101">Lập trình C++ Nâng cao</a></li>
                 <li class="book-item fade-element" style="--delay: 1.8s;"><a href="borrow.html?bookId=102">Cấu trúc dữ liệu và Giải thuật</a></li>
-                <li class="book-item fade-element" style="--delay: 1.9s;"><a href="borrow.html?bookId=103">Thiết kế hệ thống căn bản</a></li>
+                <li class="book-item fade-element" style="--delay: 1.9s;"><a href="borrow.html?bookId=103">Thiết kế hệ thống cơ bản</a></li>
                 <li class="book-item fade-element" style="--delay: 2.0s;"><a href="borrow.html?bookId=104">OOP với C++</a></li>
                 <li class="book-item fade-element" style="--delay: 2.1s;"><a href="borrow.html?bookId=105">Một cuốn sách có tên rất dài</a></li>
                 <li class="book-item fade-element" style="--delay: 2.2s;"><a href="borrow.html?bookId=106">Sách 6</a></li>
             </ul>
+            
         </div>
     </div>
 
     <div id="contact-section" style="height: 1px;"></div>
 
-    <!-- Include Session Manager FIRST -->
     <script src="session.js"></script>
     
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            document.body.classList.remove('is-loading');
+            document.body.classList.remove('is-loading'); 
+            Auth.updateNavbar();
 
-            // Display user info if logged in
-            SessionManager.displayUserInfo('user-info-display');
+            async function fetchAndUpdateBookStatus() {
+                try {
+                    const response = await fetch('/get-all-books');
+                    if (!response.ok) throw new Error('Failed to fetch status');
+                    
+                    const booksData = await response.json();
+                    const bookStatusMap = new Map();
+                    booksData.forEach(book => bookStatusMap.set(book.id, book));
+
+                    const bookLinks = document.querySelectorAll('.book-list .book-item a');
+
+                    bookLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        const urlParams = new URLSearchParams(href.split('?')[1]);
+                        const bookId = urlParams.get('bookId');
+                        const book = bookStatusMap.get(bookId);
+
+                        if (book) {
+                            link.innerHTML = `
+                                <div class="book-cover-placeholder">
+                                    <i class='bx ${book.iconName || 'bx-book'}'></i>
+                                </div>
+                                <div class="book-info">
+                                    <h3 class="book-title">${book.title}</h3>
+                                    <p class="book-author">${book.author}</p>
+                                </div>
+                            `;
+
+                            if (!book.isAvailable) {
+                                link.classList.add('disabled');
+                                link.href = '#'; 
+                                link.onclick = (e) => e.preventDefault();
+                            }
+                        } else {
+                            link.innerHTML = `
+                                <div class="book-cover-placeholder">
+                                    <i class='bx bx-error-alt'></i>
+                                </div>
+                                <div class="book-info">
+                                    <h3 class="book-title">Book Not Found</h3>
+                                    <p class="book-author">Unknown</p>
+                                </div>
+                            `;
+                            link.classList.add('disabled');
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error updating book status:', error);
+                    const bookList = document.querySelector('.book-list');
+                    if(bookList) bookList.innerHTML = "<p>Error loading books. Please try refreshing.</p>";
+                }
+            }
+            
+            fetchAndUpdateBookStatus();
 
             // Navbar magnification effect
             const navItems = document.querySelectorAll('.vertical-navbar .nav-item');
@@ -145,6 +199,5 @@
             });
         });
     </script>
-    <script src="session.js"></script>
-</body>
+    </body>
 </html>

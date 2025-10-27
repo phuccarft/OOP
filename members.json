@@ -4,5 +4,11 @@
         "id": "test1",
         "name": "thanh vien thu nghiem 1",
         "type": "student"
+    },
+    {
+        "email": "test",
+        "id": "test2",
+        "name": "thanh vien thu nghiem 2",
+        "type": "teacher"
     }
 ]
