@@ -1,4 +1,3 @@
-// session.js - Simple session management
 const Auth = {
     STORAGE_KEY: 'library_user',
 

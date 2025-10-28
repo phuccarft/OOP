@@ -29,9 +29,9 @@ std::string get_due_date(int days_to_add) {
 }
 
 void run_server(Server& svr, Library& lib) {
-    // ĐỊNH TUYẾN RÕ RÀNG CHO CÁC TỆP TĨNH (STATIC FILES) ĐỂ TRÁNH LỖI 404
 
-    // Trang chủ
+    svr.set_base_dir("./FE");
+
     svr.Get("/", [](const Request&, Response& res) {
         res.set_file_content("index.html", "text/html");
     });
@@ -53,7 +53,66 @@ void run_server(Server& svr, Library& lib) {
     svr.Get("/books.js", [](const Request&, Response& res) {
         res.set_file_content("books.js", "application/javascript");
     });
+    svr.Post("/get-borrow-preview", [&](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        try {
+            json data = json::parse(req.body);
+            std::string memberId = data["memberId"];
+            std::string memberType = data["memberType"];
+            std::string bookIsbn = data["bookId"];
 
+            // 1. Find the book
+            Book* book = lib.findBookByIsbn(bookIsbn);
+            if (book == nullptr || !book->getIsAvailable()) {
+                res.status = 404;
+                json error_json;
+                error_json["success"] = false;
+                error_json["message"] = "Sach khong ton tai hoac da duoc muon het.";
+                res.set_content(error_json.dump(), "application/json");
+                return;
+            }
+
+            // 2. Find the member (or use temporary info)
+            Member* currentMember = lib.findMemberByID(memberId);
+            double lateFeePerDay = 1000.0; // Default
+
+            if (currentMember != nullptr) {
+                // Member exists, use their fee structure
+                lateFeePerDay = currentMember->calculateLateFee(1);
+            } else {
+                // Member doesn't exist yet, calculate fee based on form type
+                if (memberType == "student") {
+                    lateFeePerDay = 1000.0; // Student::calculateLateFee(1)
+                } else if (memberType == "teacher") {
+                    lateFeePerDay = 500.0;  // Teacher::calculateLateFee(1)
+                }
+            }
+
+            double baseBorrowFee = 10000.0;
+            std::string bookTitle = book->getTitle();
+
+            // 3. Send preview data back
+            json response_json;
+            response_json["success"] = true;
+            response_json["bookTitle"] = bookTitle;
+            response_json["borrowFee"] = std::to_string(static_cast<int>(baseBorrowFee));
+            response_json["lateFeeRate"] = std::to_string(static_cast<int>(lateFeePerDay));
+            response_json["availability"] = "Co san (" + std::to_string(book->getAvailableCopies()) + " con lai)";
+            res.set_content(response_json.dump(), "application/json");
+
+        } catch (std::exception& e) {
+            res.status = 500;
+            res.set_content("Loi server: " + std::string(e.what()), "text/plain");
+        }
+    });
+
+    // OPTIONS handler for the new preview endpoint
+    svr.Options("/get-borrow-preview", [](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.status = 204;
+    });
     // Endpoint xử lý form mượn sách
     svr.Post("/borrow-book", [&](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
@@ -63,7 +122,7 @@ void run_server(Server& svr, Library& lib) {
             std::string memberId = data["memberId"];
             std::string memberType = data["memberType"]; 
             std::string memberEmail = data["memberEmail"]; 
-            std::string bookIsbn = data["bookId"]; // <-- Đổi tên biến thành bookIsbn
+            std::string bookIsbn = data["bookId"];
 
             // 1. Thêm thành viên (nếu chưa tồn tại) và lấy thông tin member
             lib.addMember(memberName, memberId, memberEmail, memberType);
@@ -73,7 +132,6 @@ void run_server(Server& svr, Library& lib) {
             Loan* newLoan = lib.borrowBook(bookIsbn, memberId);
 
             if (newLoan == nullptr) {
-                // Sách không tồn tại hoặc đã được mượn
                 res.status = 400;
                 json error_json;
                 error_json["success"] = false;
@@ -116,13 +174,73 @@ lib.saveLoans();
             res.set_content(response_json.dump(), "application/json");
 
         } catch (json::parse_error& e) {
-            // ... (Logic xử lý lỗi) ...
             res.status = 400;
             res.set_content("JSON khong hop le: " + std::string(e.what()), "text/plain");
         } catch (std::exception& e) {
             res.status = 500;
             res.set_content("Loi server: " + std::string(e.what()), "text/plain");
         }
+    });
+    svr.Post("/return-book", [&](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        try {
+            json data = json::parse(req.body);
+            std::string memberId = data["memberId"];
+            std::string bookIsbn = data["bookId"];
+
+            if (memberId.empty() || bookIsbn.empty()) {
+                throw std::runtime_error("Member ID and Book ID are required.");
+            }
+
+            bool success = lib.returnBook(memberId, bookIsbn);
+
+            if (success) {
+                json response_json;
+                response_json["success"] = true;
+                response_json["message"] = "Sach da duoc tra thanh cong!";
+                res.set_content(response_json.dump(), "application/json");
+            } else {
+                res.status = 404;
+                json error_json;
+                error_json["success"] = false;
+                error_json["message"] = "Khong tim thay giao dich muon phu hop de tra.";
+                res.set_content(error_json.dump(), "application/json");
+            }
+
+        } catch (std::exception& e) {
+            res.status = 500;
+            res.set_content("Loi server: " + std::string(e.what()), "text/plain");
+        }
+    });
+
+    svr.Options("/return-book", [](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.status = 204;
+    });
+    svr.Post("/get-my-loans", [&](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        try {
+            json data = json::parse(req.body);
+            std::string memberId = data["memberId"];
+            if (memberId.empty()) {
+                throw std::runtime_error("Member ID is required.");
+            }
+            json loansJson = lib.getActiveLoansByMember(memberId);
+            res.set_header("Cache-Control", "no-store");
+            res.set_content(loansJson.dump(), "application/json");
+
+        } catch (std::exception& e) {
+            res.status = 500;
+            res.set_content("Loi server: " + std::string(e.what()), "text/plain");
+        }
+    });
+    svr.Options("/get-my-loans", [](const Request& req, Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.status = 204;
     });
     svr.Post("/check-member", [&](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");

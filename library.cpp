@@ -151,3 +151,37 @@ Member* Library::findMemberByCredentials(const std::string& id, const std::strin
 std::vector<Book> Library::getAllBooks() const {
     return catalog.getAllBooks();
 }
+bool Library::returnBook(const std::string& memberId, const std::string& bookIsbn) {
+    bool foundAndReturned = false;
+    for (Loan* loan : activeLoans) {
+        if (loan && !loan->isReturned && loan->member->getId() == memberId && loan->book->getIsbn() == bookIsbn) {
+            
+            loan->returnBook();
+            
+            std::cout << "[Logic] Da tra sach: " << bookIsbn 
+                      << " boi TV: " << memberId << "\n";
+            
+            foundAndReturned = true;
+            break;
+        }
+    }
+    if (foundAndReturned) {
+        saveLoans();
+    } else {
+        std::cerr << "[Logic Error] Khong tim thay giao dich muon (chua tra) cho TV: " 
+                  << memberId << " va Sach: " << bookIsbn << "\n";
+    }
+    return foundAndReturned;
+}
+Book* Library::findBookByIsbn(const std::string& isbn) {
+    return catalog.findBookByIsbn(isbn);
+}
+json Library::getActiveLoansByMember(const std::string& memberId) const {
+    json memberLoans = json::array();
+    for (const Loan* loan : activeLoans) {
+        if (loan && !loan->isReturned && loan->member->getId() == memberId) {
+            memberLoans.push_back(loan->to_json());
+        }
+    }
+    return memberLoans;
+}
