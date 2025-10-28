@@ -244,6 +244,9 @@
 <body style="background-color: #f4f7f6;">
     <div class="dashboard-wrapper">
         <div class="dashboard-sidebar">
+            <a href="/" class="menu-item" style="border-bottom: 1px solid var(--border-light); margin-bottom: 10px;">
+                <i class='bx bx-home-alt'></i> Quay về Trang chủ
+            </a>
             <div class="sidebar-header-menu">
                 <i class='bx bx-user-circle'></i> Profile
             </div>
@@ -327,94 +330,165 @@
             </div>
         </div>
     </div>
-
-    <!-- Include Session Manager -->
     <script src="session.js"></script>
-  <script>
-    // Function to switch tabs
-    function switchTab(tabId) {
-      document.querySelectorAll('.menu-item').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.form-section').forEach(section => section.style.display = 'none');
-      const menuItem = document.querySelector(`.menu-item[data-tab="${tabId}"]`);
-      if (menuItem) {
-        menuItem.classList.add('active');
-      }
-      const tabContent = document.getElementById(tabId);
-      if (tabContent) {
-        tabContent.style.display = 'block';
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      // **FIX 1: Use Auth.isLoggedIn() and redirect if false**
-      // Require login to access this page
-      if (!Auth.isLoggedIn()) {
-          alert('Bạn phải đăng nhập để xem trang này.');
-          window.location.href = '/login_page.html';
-          return;
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      // **FIX 2: Use Auth.getUser() instead of SessionManager.getCurrentUser()**
-      // Get user data from session (priority) or URL
-      const user = Auth.getUser(); 
-      
-      const memberId = user?.id || urlParams.get('memberId') || 'N/A';
-      const memberName = user?.name || urlParams.get('memberName') || 'Thành viên';
-      const memberEmail = user?.email || urlParams.get('memberEmail') || 'N/A';
-      const memberType = user?.type || urlParams.get('memberType') || 'N/A';
-      const memberTypeText = memberType === 'student' ? 'Sinh viên' : memberType === 'teacher' ? 'Giáo viên' : 'Khác';
-
-      // Update Profile Header
-      document.getElementById('profile-full-name').textContent = memberName;
-      document.getElementById('profile-email-display').textContent = memberEmail;
-
-      // Update Profile Tab
-      document.getElementById('member-name-full').value = memberName;
-      document.getElementById('member-id-display').value = memberId;
-      document.getElementById('member-email-input').value = memberEmail;
-      document.getElementById('member-type-display').value = memberTypeText;
-
-      // Handle Borrow Details Tab
-      const bookTitle = urlParams.get('bookTitle');
-      const dueDate = urlParams.get('dueDate');
-      const borrowFee = urlParams.get('borrowFee');
-      const lateFeeRate = urlParams.get('lateFeeRate');
-      const formattedBorrowFee = borrowFee ? new Intl.NumberFormat('vi-VN').format(borrowFee) : 'N/A';
-      const transactionDetailsDiv = document.getElementById('transaction-details');
-
-      if (bookTitle && dueDate) {
-        transactionDetailsDiv.innerHTML = `
-          <div class="loan-detail"><strong>Sách mượn:</strong> <span>${bookTitle}</span></div>
-          <div class="loan-detail"><strong>Ngày hẹn trả:</strong> <span style="color: var(--highlight-secondary);">${dueDate}</span></div>
-          <div class="loan-detail"><strong>Phí mượn (ước tính):</strong> <span>${formattedBorrowFee} VND</span></div>
-          <div class="loan-detail"><strong>Phí trễ hạn/Ngày:</strong> <span>${lateFeeRate} VND</span></div>
-        `;
-      } else {
-        transactionDetailsDiv.innerHTML = `<p style="color:#aaa;">Không có chi tiết giao dịch mượn sách gần đây. Hãy mượn sách mới!</p>`;
-      }
-
-      // Setup sidebar menu events
-      document.querySelectorAll('.menu-item').forEach(item => {
-        const tabId = item.getAttribute('data-tab');
-        if (tabId) {
-          item.addEventListener('click', () => switchTab(tabId));
+    <script>
+        let currentMemberId = 'N/A';
+        function switchTab(tabId) {
+            document.querySelectorAll('.menu-item').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(section => section.style.display = 'none');
+            const menuItem = document.querySelector(`.menu-item[data-tab="${tabId}"]`);
+            if (menuItem) { menuItem.classList.add('active'); }
+            const tabContent = document.getElementById(tabId);
+            if (tabContent) { tabContent.style.display = 'block'; }
         }
-      });
+        async function handleReturnBook(event) {
+            const returnBtn = event.currentTarget;
+            const bookIsbn = returnBtn.dataset.bookIsbn;
+            const bookTitle = returnBtn.dataset.bookTitle;
+            const loanItemDiv = returnBtn.closest('.loan-item'); // Get the parent div
 
-      // **FIX 3: Use Auth.logout() and redirect**
-      // Logout button
-      document.getElementById('logout-btn').addEventListener('click', () => {
-        if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-          Auth.logout();
-          window.location.href = '/login_page.html'; // Redirect to login
+            if (!confirm(`Ban co chac chan muon tra sach: "${bookTitle}"?`)) {
+                return;
+            }
+
+            const feedbackDiv = loanItemDiv.querySelector('.return-feedback');
+            returnBtn.disabled = true;
+            returnBtn.textContent = 'Dang xu ly...';
+
+            try {
+                const response = await fetch('/return-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: currentMemberId, bookId: bookIsbn })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Loi khi tra sach.');
+                }
+                loanItemDiv.innerHTML = `<p style="color:green; text-align:center; font-weight: bold;">Da tra sach "${bookTitle}" thanh cong!</p>`;
+            
+            } catch (error) {
+                feedbackDiv.textContent = `Loi: ${error.message}`;
+                feedbackDiv.className = 'feedback-message error';
+                feedbackDiv.style.display = 'block';
+                returnBtn.disabled = false;
+                returnBtn.textContent = 'Tra sach nay';
+            }
         }
-      });
 
-      // Default show profile tab
-      switchTab('profile-tab');
-    });
-  </script>
+        async function loadMemberLoans(memberId) {
+            const transactionDetailsDiv = document.getElementById('transaction-details');
+            transactionDetailsDiv.innerHTML = `<p style="color:#aaa;">Dang tai cac sach da muon...</p>`;
+
+            try {
+                const response = await fetch('/get-my-loans', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: memberId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+
+                const loans = await response.json();
+
+                if (loans.length === 0) {
+                    transactionDetailsDiv.innerHTML = `<p style="color:#aaa;">Ban khong co sach nao dang muon.</p>`;
+                    return;
+                }
+
+                let html = '';
+                for (const loan of loans) {
+                    const dueDate = new Date(loan.dueDate * 1000).toLocaleDateString('vi-VN', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+
+                    html += `
+                        <div class="loan-item" style="border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <div class="loan-detail">
+                                <strong>Sách mượn:</strong> 
+                                <span>${loan.bookTitle} (ID: ${loan.bookIsbn})</span>
+                            </div>
+                            <div class="loan-detail">
+                                <strong>Ngày hẹn trả:</strong> 
+                                <span style="color: var(--highlight-secondary);">${dueDate}</span>
+                            </div>
+                            
+                            <button class="footer-button save-button return-book-btn" 
+                                    style="background-color: #d32f2f; margin-top: 15px; width: 100%;"
+                                    data-book-isbn="${loan.bookIsbn}"
+                                    data-book-title="${loan.bookTitle}">
+                                <i class='bx bx-book-remove'></i> Tra sach nay
+                            </button>
+                            <div class="return-feedback feedback-message" style="display:none; margin-top: 10px;"></div>
+                        </div>
+                    `;
+                }
+                transactionDetailsDiv.innerHTML = html;
+
+                // IMPORTANT: Add event listeners AFTER setting innerHTML
+                document.querySelectorAll('.return-book-btn').forEach(button => {
+                    button.addEventListener('click', handleReturnBook);
+                });
+
+            } catch (error) {
+                transactionDetailsDiv.innerHTML = `<p style="color:red;">Khong the tai lich su muon sach: ${error.message}</p>`;
+            }
+        }
+
+        /**
+         * MODIFIED: Main page load listener
+         */
+        document.addEventListener("DOMContentLoaded", () => {
+            // Require login
+            if (!Auth.isLoggedIn()) {
+                alert('Bạn phải đăng nhập để xem trang này.');
+                window.location.href = '/login_page.html';
+                return;
+            }
+
+            const user = Auth.getUser(); // Get user from session
+
+            // Get user data
+            currentMemberId = user?.id || 'N/A';
+            const memberName = user?.name || 'Thành viên';
+            const memberEmail = user?.email || 'N/A';
+            const memberType = user?.type || 'N/A';
+            const memberTypeText = memberType === 'student' ? 'Sinh viên' : memberType === 'teacher' ? 'Giáo vin' : 'Khác';
+
+            // Update Profile Header
+            document.getElementById('profile-full-name').textContent = memberName;
+            document.getElementById('profile-email-display').textContent = memberEmail;
+
+            // Update Profile Tab
+            document.getElementById('member-name-full').value = memberName;
+            document.getElementById('member-id-display').value = currentMemberId;
+            document.getElementById('member-email-input').value = memberEmail;
+            document.getElementById('member-type-display').value = memberTypeText;
+            loadMemberLoans(currentMemberId);
+            
+            // Setup sidebar menu events
+            document.querySelectorAll('.menu-item').forEach(item => {
+                const tabId = item.getAttribute('data-tab');
+                if (tabId) {
+                    item.addEventListener('click', () => switchTab(tabId));
+                }
+            });
+
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Bn c chc chn mun ng xut?')) {
+                    Auth.logout();
+                    window.location.href = '/login_page.html';
+                }
+            });
+
+            // Default show profile tab
+            switchTab('profile-tab');
+        });
+    </script>
 </body>
 </html>

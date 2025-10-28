@@ -1,5 +1,4 @@
-// auth.js - Login form handler
-console.log('Auth.js loaded');
+console.log('auth.js loaded');
 
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Check if already logged in
     if (Auth.isLoggedIn()) {
         console.log('Already logged in, redirecting...');
         window.location.href = '/';

@@ -1,7 +1,4 @@
-// Updated login.js - Redirects to homepage after successful login
-
 document.addEventListener("DOMContentLoaded", () => {
-    // If already logged in, redirect to homepage
     if (SessionManager.isLoggedIn()) {
         window.location.href = '/';
         return;
